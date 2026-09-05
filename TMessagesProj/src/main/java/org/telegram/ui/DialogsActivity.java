@@ -103,6 +103,7 @@ import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BirthdayController;
 import org.telegram.messenger.BotWebViewVibrationEffect;
 import org.telegram.messenger.BuildVars;
+import org.telegram.messenger.TelevaAds;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
@@ -514,6 +515,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean canShowStoryHint;
     private boolean storyHintShown;
     private FragmentFloatingButton floatingButton3;
+    private View televaBanner;
     private FragmentFloatingButton floatingButtonStories;
     private ButtonWithCounterView addChatsToCommunityButton;
     private ChatActivityFadeView communityBottomFadeView;
@@ -4021,6 +4023,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         ContentView contentView = new ContentView(context);
         fragmentView = contentView;
 
+        if (initialDialogsType == DIALOGS_TYPE_DEFAULT) {
+            televaBanner = TelevaAds.createChatListBanner(context, getThemedColor(Theme.key_windowBackgroundWhite), this::updateTelevaBannerInsets);
+            contentView.addView(televaBanner, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 0, 0, 0, 0));
+        }
+
         viewPositionWatcher = new ViewPositionWatcher(contentView);
         iBlur3FactoryFrostedLiquidGlass.setSourceRootView(viewPositionWatcher, contentView);
         iBlur3FactoryLiquidGlass.setSourceRootView(viewPositionWatcher, contentView);
@@ -4745,6 +4752,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
         floatingButton3 = new FragmentFloatingButton(context, resourceProvider);
         contentView.addView(floatingButton3, FragmentFloatingButton.createDefaultLayoutParams());
+        if (televaBanner != null) {
+            updateTelevaBannerInsets();
+        }
         floatingButton3.setOnClickListener(v -> {
             if (parentLayout != null && parentLayout.isInPreviewMode()) {
                 finishPreviewFragment();
@@ -14222,7 +14232,24 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         } else if (communityId != 0) {
             return navigationBarHeight + dp(12 + 48 + 12);
         } else {
-            return navigationBarHeight + additionNavigationBarHeight;
+            return navigationBarHeight + additionNavigationBarHeight + (televaBanner != null ? TelevaAds.getBannerHeightPx() : 0);
+        }
+    }
+
+    private void updateTelevaBannerInsets() {
+        int h = televaBanner != null ? TelevaAds.getBannerHeightPx() : 0;
+        if (floatingButton3 != null && floatingButton3.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) floatingButton3.getLayoutParams();
+            lp.bottomMargin = FragmentFloatingButton.createDefaultLayoutParams().bottomMargin + h;
+            floatingButton3.requestLayout();
+        }
+        if (floatingButtonStories != null && floatingButtonStories.getLayoutParams() instanceof FrameLayout.LayoutParams) {
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) floatingButtonStories.getLayoutParams();
+            lp.bottomMargin = FragmentFloatingButton.createSubButtonLayoutParams().bottomMargin + h;
+            floatingButtonStories.requestLayout();
+        }
+        if (fragmentView != null) {
+            fragmentView.requestLayout();
         }
     }
 

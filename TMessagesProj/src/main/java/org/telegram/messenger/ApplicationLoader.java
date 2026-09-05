@@ -280,6 +280,7 @@ public class ApplicationLoader extends Application {
 
     @Override
     public void onCreate() {
+        TelevaAds.init(this);
         applicationLoaderInstance = this;
         try {
             applicationContext = getApplicationContext();

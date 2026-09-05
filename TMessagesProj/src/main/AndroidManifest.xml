@@ -111,6 +111,12 @@
         android:usesCleartextTraffic="true"
         android:enableOnBackInvokedCallback="true"
     >
+
+    <!-- Televa ads: AdMob app ID (mirrors TelevaAds.ADMOB_APP_ID) -->
+    <meta-data
+        android:name="com.google.android.gms.ads.APPLICATION_ID"
+        android:value="ca-app-pub-3940256099942544~3347511713" />
+
         <!-- usesCleartextTraffic for browser supporting opening http:// links -->
 
         <activity-alias
