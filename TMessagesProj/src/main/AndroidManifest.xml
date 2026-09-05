@@ -115,7 +115,7 @@
     <!-- Televa ads: AdMob app ID (mirrors TelevaAds.ADMOB_APP_ID) -->
     <meta-data
         android:name="com.google.android.gms.ads.APPLICATION_ID"
-        android:value="ca-app-pub-3940256099942544~3347511713" />
+        android:value="ca-app-pub-7674351831585708~9900669574" />
 
         <!-- usesCleartextTraffic for browser supporting opening http:// links -->
 

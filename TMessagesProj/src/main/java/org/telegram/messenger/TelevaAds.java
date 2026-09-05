@@ -27,10 +27,10 @@ import com.google.android.gms.ads.MobileAds;
 public class TelevaAds {
 
     // AdMob app ID — must match the meta-data value in TMessagesProj/src/main/AndroidManifest.xml
-    public static final String ADMOB_APP_ID = "ca-app-pub-3940256099942544~3347511713";
+    public static final String ADMOB_APP_ID = "ca-app-pub-7674351831585708~9900669574";
 
     // Ad unit shown on the main chat list
-    public static final String CHAT_LIST_BANNER_UNIT_ID = "ca-app-pub-3940256099942544/6300978111";
+    public static final String CHAT_LIST_BANNER_UNIT_ID = "ca-app-pub-7674351831585708/3975118574";
 
     private static boolean initialized;
     private static volatile boolean bannerVisible;

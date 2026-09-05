@@ -98,11 +98,8 @@ public class TranslateController extends BaseController {
         if (!isChatTranslateEnabled()) {
             return false;
         }
-        final TLRPC.Chat chat = getMessagesController().getChat(-dialogId);
-        return (
-            UserConfig.getInstance(currentAccount).isPremium() ||
-            chat != null && chat.autotranslation
-        );
+        // Televa: all translation features are free for everyone
+        return true;
     }
 
     private Boolean chatTranslateEnabled;

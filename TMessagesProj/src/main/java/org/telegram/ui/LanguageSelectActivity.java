@@ -219,11 +219,8 @@ public class LanguageSelectActivity extends BaseFragment implements Notification
                         ((TextCheckCell) view).setChecked(value);
                         NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateSearchSettings);
                     } else if (position == autoTranslationPosition) {
+                        // Televa: translation is free for everyone
                         boolean value = !getChatValue();
-                        if (value && !getUserConfig().isPremium()) {
-                            showDialog(new PremiumFeatureBottomSheet(LanguageSelectActivity.this, PremiumPreviewFragment.PREMIUM_FEATURE_TRANSLATIONS, false));
-                            return;
-                        }
                         getMessagesController().getTranslateController().setChatTranslateEnabled(value);
                         NotificationCenter.getInstance(currentAccount).postNotificationName(NotificationCenter.updateSearchSettings);
                         ((TextCheckCell) view).setChecked(value);
