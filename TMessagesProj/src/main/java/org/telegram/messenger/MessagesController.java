@@ -5829,7 +5829,7 @@ public class MessagesController extends BaseController implements NotificationCe
         TLRPC.TL_userForeign_old2 user = new TLRPC.TL_userForeign_old2();
         user.phone = "333";
         user.id = 333000;
-        user.first_name = "Telegram";
+        user.first_name = "Televa";
         user.last_name = "";
         user.status = null;
         user.photo = new TLRPC.TL_userProfilePhotoEmpty();
@@ -5839,7 +5839,7 @@ public class MessagesController extends BaseController implements NotificationCe
         user.phone = "42777";
         user.id = 777000;
         user.verified = true;
-        user.first_name = "Telegram";
+        user.first_name = "Televa";
         user.last_name = "Notifications";
         user.status = null;
         user.photo = new TLRPC.TL_userProfilePhotoEmpty();
@@ -6858,6 +6858,16 @@ public class MessagesController extends BaseController implements NotificationCe
     public boolean putUser(TLRPC.User user, boolean fromCache, boolean force) {
         if (user == null) {
             return false;
+        }
+        // Televa rebrand: force Televa's own service-account display names, overriding
+        // whatever name the underlying Telegram network sends for these special accounts (333000/777000),
+        // so the app never shows "Telegram" in the UI regardless of server data.
+        if (user.id == 333000) {
+            user.first_name = "Televa";
+            user.last_name = "";
+        } else if (user.id == 777000) {
+            user.first_name = "Televa";
+            user.last_name = "Notifications";
         }
         fromCache = fromCache && user.id / 1000 != 333 && user.id != 777000;
         TLRPC.User oldUser = users.get(user.id);
