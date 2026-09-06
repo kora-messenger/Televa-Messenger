@@ -915,6 +915,10 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public int getChatMaxUniqReactions(long dialogId) {
+        // Televa: premium reactions count for everyone
+        if (getUserConfig().isPremium()) {
+            return Math.max(reactionsUniqMax, reactionsUserMaxPremium > 0 ? reactionsUserMaxPremium : 3);
+        }
         TLRPC.ChatFull chatFull = MessagesController.getInstance(currentAccount).getChatFull(-dialogId);
         if (chatFull != null && (chatFull instanceof TLRPC.TL_chatFull ? (chatFull.flags & 1048576) != 0 : (chatFull.flags2 & 8192) != 0)) {
             return chatFull.reactions_limit;
@@ -923,7 +927,8 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean isPremiumUser(TLRPC.User currentUser) {
-        return currentUser != null && currentUser.premium && !isSupportUser(currentUser);
+        // Televa: own account is always premium; peers reflect server state
+        return currentUser != null && (currentUser.premium || currentUser.id == getUserConfig().getClientUserId()) && !isSupportUser(currentUser);
     }
 
     public boolean didPressTranscribeButtonEnough() {
@@ -23724,18 +23729,8 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean storyEntitiesAllowed(TLRPC.User user) {
-        if (user != null && user.id == storiesChangelogUserId) {
-            return true;
-        }
-        switch (storiesEntities) {
-            case "premium":
-                return user != null && user.premium;
-            case "enabled":
-                return true;
-            default:
-            case "disabled":
-                return false;
-        }
+        // Televa: story entities are free for everyone
+        return true;
     }
 
     public static class ChannelRecommendations {

@@ -572,11 +572,12 @@ public class UserConfig extends BaseController {
     }
 
     public boolean isPremium() {
-        TLRPC.User user = currentUser;
-        if (user == null) {
-            return false;
-        }
-        return user.premium;
+        // Televa: every premium feature is free for all users.
+        // The client treats the logged-in account as premium everywhere:
+        // premium stickers, effects, reactions, formatting, emoji status,
+        // animated avatars, paid messages, tags, stories, limits, uploads.
+        // (Server-side caps enforced by the network remain its decision.)
+        return currentUser != null;
     }
 
     public Long getEmojiStatus() {
