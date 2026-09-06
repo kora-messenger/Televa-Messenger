@@ -27,6 +27,7 @@ import androidx.annotation.IntDef;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.pm.ShortcutManagerCompat;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.telegram.tgnet.ConnectionsManager;
 import org.telegram.tgnet.SerializedData;
@@ -1881,4 +1882,107 @@ public class SharedConfig {
 
 
 
+    // Televa voice changer
+    // preset: 0 = off, 1..10 = built-in presets, 100 = sample-cloned voice
+    public static int voiceChangerPreset = 0;
+    // target speaker fundamental frequency in Hz, measured from the uploaded sample
+    public static float voiceCloneTargetF0 = 0.0f;
+    private static boolean voiceChangerLoaded = false;
+
+    public static class VoiceClone {
+        public String name;
+        public float f0;
+        public String samplePath;
+
+        public VoiceClone(String n, float f, String path) {
+            name = n;
+            f0 = f;
+            samplePath = path;
+        }
+    }
+
+    public static void loadVoiceChangerConfig() {
+        if (voiceChangerLoaded) {
+            return;
+        }
+        voiceChangerLoaded = true;
+        try {
+            SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+            voiceChangerPreset = preferences.getInt("televa_voice_preset", 0);
+            voiceCloneTargetF0 = preferences.getFloat("televa_voice_clone_f0", 0.0f);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    public static void saveVoiceChangerConfig() {
+        try {
+            SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putInt("televa_voice_preset", voiceChangerPreset);
+            editor.putFloat("televa_voice_clone_f0", voiceCloneTargetF0);
+            editor.apply();
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    public static ArrayList<VoiceClone> getVoiceClones() {
+        ArrayList<VoiceClone> list = new ArrayList<>();
+        try {
+            SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+            String json = preferences.getString("televa_voice_clones", "[]");
+            JSONArray array = new JSONArray(json);
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject o = array.getJSONObject(i);
+                list.add(new VoiceClone(o.getString("name"), (float) o.getDouble("f0"), o.optString("path", "")));
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return list;
+    }
+
+    public static void addVoiceClone(VoiceClone clone) {
+        try {
+            ArrayList<VoiceClone> list = getVoiceClones();
+            list.add(clone);
+            saveVoiceClones(list);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    public static void removeVoiceClone(int index) {
+        try {
+            ArrayList<VoiceClone> list = getVoiceClones();
+            if (index >= 0 && index < list.size()) {
+                File f = new File(list.get(index).samplePath);
+                if (f.exists()) {
+                    f.delete();
+                }
+                list.remove(index);
+                saveVoiceClones(list);
+            }
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
+
+    private static void saveVoiceClones(ArrayList<VoiceClone> list) {
+        try {
+            JSONArray array = new JSONArray();
+            for (VoiceClone c : list) {
+                JSONObject o = new JSONObject();
+                o.put("name", c.name);
+                o.put("f0", (double) c.f0);
+                o.put("path", c.samplePath);
+                array.put(o);
+            }
+            SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+            preferences.edit().putString("televa_voice_clones", array.toString()).apply();
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+    }
 }

@@ -18,6 +18,7 @@ import android.app.KeyguardManager;
 import android.app.RemoteAction;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -125,6 +126,7 @@ import org.telegram.ui.Components.voip.PrivateVideoPreviewDialogNew;
 import org.telegram.ui.Components.voip.RateCallLayout;
 import org.telegram.ui.Components.voip.VoIPBackgroundProvider;
 import org.telegram.ui.Components.voip.VoIPButtonsLayout;
+import org.telegram.ui.Components.voip.VoIPVoiceChangerSheet;
 import org.telegram.ui.Components.voip.VoIPFloatingLayout;
 import org.telegram.ui.Components.voip.VoIPHelper;
 import org.telegram.ui.Components.voip.VoIPNotificationsLayout;
@@ -169,7 +171,10 @@ public class VoIPFragment implements
     private VoIpSwitchLayout bottomSpeakerBtn;
     private VoIpSwitchLayout bottomVideoBtn;
     private VoIpSwitchLayout bottomMuteBtn;
+    private VoIpSwitchLayout bottomVoiceBtn; // Televa voice changer
     private VoIPToggleButton bottomEndCallBtn;
+    private VoIPVoiceChangerSheet voiceChangerSheet;
+    private final static int VOICE_CLONE_SAMPLE_REQUEST = 20250;
     private final VoIPBackgroundProvider backgroundProvider = new VoIPBackgroundProvider();
 
     private ViewGroup fragmentView;
@@ -555,6 +560,10 @@ public class VoIPFragment implements
         if (addPeopleSheet != null) {
             addPeopleSheet.dismiss();
             addPeopleSheet = null;
+        }
+        if (voiceChangerSheet != null) {
+            voiceChangerSheet.dismiss();
+            voiceChangerSheet = null;
         }
     }
 
@@ -1097,9 +1106,16 @@ public class VoIPFragment implements
         bottomEndCallBtn.setScaleY(0f);
         bottomEndCallBtn.animate().setStartDelay(startDelay + 48).translationY(0).scaleY(1f).scaleX(1f).setDuration(250).start();
 
+        bottomVoiceBtn = new VoIpSwitchLayout(context, backgroundProvider);
+        bottomVoiceBtn.setTranslationY(AndroidUtilities.dp(100));
+        bottomVoiceBtn.setScaleX(0f);
+        bottomVoiceBtn.setScaleY(0f);
+        bottomVoiceBtn.animate().setStartDelay(startDelay + 48).translationY(0).scaleY(1f).scaleX(1f).setDuration(250).start();
+
         buttonsLayout.addView(bottomSpeakerBtn);
         buttonsLayout.addView(bottomVideoBtn);
         buttonsLayout.addView(bottomMuteBtn);
+        buttonsLayout.addView(bottomVoiceBtn);
         buttonsLayout.addView(bottomEndCallBtn);
 
         acceptDeclineView = new AcceptDeclineView(context);
@@ -1294,6 +1310,7 @@ public class VoIPFragment implements
         bottomSpeakerBtn.animate().cancel();
         bottomMuteBtn.animate().cancel();
         bottomVideoBtn.animate().cancel();
+        bottomVoiceBtn.animate().cancel();
         int[] loc = new int[2];
         acceptDeclineView.getLocationOnScreen(loc);
         acceptDeclineView.stopAnimations();
@@ -1302,14 +1319,17 @@ public class VoIPFragment implements
         bottomSpeakerBtn.setType(VoIpSwitchLayout.Type.SPEAKER, false);
         bottomMuteBtn.setType(VoIpSwitchLayout.Type.MICRO, false);
         bottomVideoBtn.setType(VoIpSwitchLayout.Type.VIDEO, true);
+        bottomVoiceBtn.setType(VoIpSwitchLayout.Type.VOICE, SharedConfig.voiceChangerPreset != 0);
         bottomEndCallBtn.setVisibility(View.VISIBLE);
         bottomSpeakerBtn.setVisibility(View.VISIBLE);
         bottomMuteBtn.setVisibility(View.VISIBLE);
         bottomVideoBtn.setVisibility(View.VISIBLE);
+        bottomVoiceBtn.setVisibility(View.VISIBLE);
         bottomEndCallBtn.setAlpha(0f);
         bottomSpeakerBtn.setAlpha(0f);
         bottomMuteBtn.setAlpha(0f);
         bottomVideoBtn.setAlpha(0f);
+        bottomVoiceBtn.setAlpha(0f);
         final ViewGroup.MarginLayoutParams lp = ((ViewGroup.MarginLayoutParams) acceptDeclineView.getLayoutParams());
         final int startMargin = lp.getMarginEnd();
         final int endMargin = AndroidUtilities.dp(52);
@@ -2636,6 +2656,7 @@ public class VoIPFragment implements
             bottomSpeakerBtn.setVisibility(View.GONE);
             bottomVideoBtn.setVisibility(View.GONE);
             bottomMuteBtn.setVisibility(View.GONE);
+            bottomVoiceBtn.setVisibility(View.GONE);
             bottomEndCallBtn.setVisibility(View.GONE);
             return;
         }
@@ -2658,6 +2679,7 @@ public class VoIPFragment implements
                 bottomVideoBtn.setVisibility(View.GONE);
                 bottomMuteBtn.setVisibility(View.GONE);
             }
+            bottomVoiceBtn.setVisibility(View.GONE);
             bottomEndCallBtn.setVisibility(View.GONE);
         } else {
             if (instance == null) {
@@ -2676,6 +2698,7 @@ public class VoIPFragment implements
             }
             setVideoAction(bottomVideoBtn, service, false);
             setMicrohoneAction(bottomMuteBtn, service, animated);
+            setVoiceAction(bottomVoiceBtn, service, animated);
 
             bottomEndCallBtn.setData(R.drawable.calls_decline, Color.WHITE, 0xFFF01D2C, LocaleController.getString(R.string.VoipEndCall2), false, animated);
             bottomEndCallBtn.setOnClickListener(view -> {
@@ -2698,6 +2721,10 @@ public class VoIPFragment implements
         }
         if (bottomMuteBtn.getVisibility() == View.VISIBLE) {
             bottomMuteBtn.animationDelay = animationDelay;
+            animationDelay += 16;
+        }
+        if (bottomVoiceBtn.getVisibility() == View.VISIBLE) {
+            bottomVoiceBtn.animationDelay = animationDelay;
             animationDelay += 16;
         }
         if (bottomEndCallBtn.getVisibility() == View.VISIBLE) {
@@ -2724,6 +2751,51 @@ public class VoIPFragment implements
                 updateViewState();
             }
         });
+    }
+
+    // Televa voice changer: apply the saved preset and open the voice sheet.
+    private void setVoiceAction(VoIpSwitchLayout bottomButton, VoIPService service, boolean animated) {
+        bottomButton.setType(VoIpSwitchLayout.Type.VOICE, SharedConfig.voiceChangerPreset != 0);
+        bottomButton.setOnBtnClickedListener(view -> {
+            AndroidUtilities.cancelRunOnUIThread(hideUIRunnable);
+            hideUiRunnableWaiting = false;
+            showVoiceChangerSheet();
+        });
+    }
+
+    private void showVoiceChangerSheet() {
+        if (voiceChangerSheet == null) {
+            voiceChangerSheet = new VoIPVoiceChangerSheet(activity, new VoIPVoiceChangerSheet.Listener() {
+                @Override
+                public void onPresetSelected(int preset, float cloneTargetF0) {
+                    VoIPService service = VoIPService.getSharedInstance();
+                    if (service != null) {
+                        service.setVoiceChangerPreset(preset, cloneTargetF0);
+                    }
+                    bottomVoiceBtn.setType(VoIpSwitchLayout.Type.VOICE, preset != 0);
+                }
+
+                @Override
+                public void onPickSampleFile() {
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                        intent.addCategory(Intent.CATEGORY_OPENABLE);
+                        intent.setType("*/*");
+                        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"audio/*", "video/*"});
+                        activity.startActivityForResult(intent, VOICE_CLONE_SAMPLE_REQUEST);
+                    } catch (Exception e) {
+                        FileLog.e(e);
+                    }
+                }
+            });
+        }
+        voiceChangerSheet.show();
+    }
+
+    public void onVoiceCloneSamplePicked(Uri uri) {
+        if (voiceChangerSheet != null && uri != null) {
+            voiceChangerSheet.onSampleFilePicked(uri);
+        }
     }
 
     private void setVideoAction(VoIpSwitchLayout bottomButton, VoIPService service, boolean fast) {

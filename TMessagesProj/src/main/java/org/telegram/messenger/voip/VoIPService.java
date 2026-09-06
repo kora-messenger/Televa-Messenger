@@ -2656,6 +2656,11 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		}
 		if (tgVoip[CAPTURE_DEVICE_CAMERA] != null) {
 			tgVoip[CAPTURE_DEVICE_CAMERA].setMuteMicrophone(micMute);
+
+			// Televa voice changer: apply the saved preset (built-in or cloned voice)
+			// as soon as the call instance exists. Real-time changes are made through
+			// setVoiceChangerPreset below.
+			applyVoiceChanger();
 		}
 	}
 
@@ -3498,6 +3503,11 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 				}
 			}));
 			tgVoip[CAPTURE_DEVICE_CAMERA].setMuteMicrophone(micMute);
+
+			// Televa voice changer: apply the saved preset (built-in or cloned voice)
+			// as soon as the call instance exists. Real-time changes are made through
+			// setVoiceChangerPreset below.
+			applyVoiceChanger();
 
 			if (newAvailable != isVideoAvailable) {
 				isVideoAvailable = newAvailable;
@@ -5420,7 +5430,22 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 	}
 
 	@Override
-	public void onConnectionStateChanged(int newState, boolean inTransition) {
+	public void applyVoiceChanger() {
+		if (tgVoip[CAPTURE_DEVICE_CAMERA] == null) {
+			return;
+		}
+		SharedConfig.loadVoiceChangerConfig();
+		tgVoip[CAPTURE_DEVICE_CAMERA].setVoiceChangerPreset(SharedConfig.voiceChangerPreset, SharedConfig.voiceCloneTargetF0);
+	}
+
+	public void setVoiceChangerPreset(int preset, float cloneTargetF0) {
+		SharedConfig.voiceChangerPreset = preset;
+		SharedConfig.voiceCloneTargetF0 = cloneTargetF0;
+		SharedConfig.saveVoiceChangerConfig();
+		applyVoiceChanger();
+	}
+
+public void onConnectionStateChanged(int newState, boolean inTransition) {
 		AndroidUtilities.runOnUIThread(() -> {
 			if (convertingVoip != null) {
 				return;

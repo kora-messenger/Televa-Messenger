@@ -458,6 +458,12 @@ void Manager::setOutputVolume(float level) {
 	});
 }
 
+void Manager::setVoiceChangerPreset(int preset, float cloneTargetF0) {
+	_mediaManager->perform([preset, cloneTargetF0](MediaManager *mediaManager) {
+		mediaManager->setVoiceChangerPreset(preset, cloneTargetF0);
+	});
+}
+
 void Manager::addExternalAudioSamples(std::vector<uint8_t> &&samples) {
     _mediaManager->perform([samples = std::move(samples)](MediaManager *mediaManager) mutable {
         mediaManager->addExternalAudioSamples(std::move(samples));

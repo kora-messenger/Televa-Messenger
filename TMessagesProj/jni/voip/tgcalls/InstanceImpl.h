@@ -35,6 +35,7 @@ public:
 	void setAudioOutputDevice(std::string id) override;
 	void setInputVolume(float level) override;
 	void setOutputVolume(float level) override;
+	void setVoiceChangerPreset(int preset, float cloneTargetF0) override;
 	void setAudioOutputDuckingEnabled(bool enabled) override;
     void addExternalAudioSamples(std::vector<uint8_t> &&samples) override;
     void setIsLowBatteryLevel(bool isLowBatteryLevel) override;

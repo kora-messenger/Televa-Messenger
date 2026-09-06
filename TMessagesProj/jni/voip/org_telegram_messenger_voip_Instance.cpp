@@ -957,6 +957,15 @@ JNIEXPORT void JNICALL Java_org_telegram_messenger_voip_NativeInstance_setAudioO
 }
 
 extern "C"
+JNIEXPORT void JNICALL Java_org_telegram_messenger_voip_NativeInstance_setVoiceChangerPreset(JNIEnv *env, jobject obj, jint preset, jfloat cloneTargetF0) {
+    InstanceHolder *instance = getInstanceHolder(env, obj);
+    if (instance == nullptr || instance->nativeInstance == nullptr) {
+        return;
+    }
+    instance->nativeInstance->setVoiceChangerPreset(preset, cloneTargetF0);
+}
+
+extern "C"
 JNIEXPORT void JNICALL Java_org_telegram_messenger_voip_NativeInstance_setEchoCancellationStrength(JNIEnv *env, jobject obj, jint strength) {
     InstanceHolder *instance = getInstanceHolder(env, obj);
     if (instance == nullptr || instance->nativeInstance == nullptr) {

@@ -36,6 +36,7 @@ public class VoIpSwitchLayout extends FrameLayout {
         VIDEO,
         BLUETOOTH,
         SPEAKER,
+        VOICE, // Televa voice changer
     }
 
     private final VoIPBackgroundProvider backgroundProvider;
@@ -98,6 +99,9 @@ public class VoIpSwitchLayout extends FrameLayout {
                 break;
             case SPEAKER:
                 newText = LocaleController.getString(R.string.VoipSpeaker);
+                break;
+            case VOICE:
+                newText = LocaleController.getString(R.string.VoipVoice);
                 break;
             default:
                 newText = "";
@@ -229,6 +233,16 @@ public class VoIpSwitchLayout extends FrameLayout {
                     attachNewButton(R.raw.bt_to_speaker, size, isSelected, newType);
                 } else if (this.type != Type.BLUETOOTH) {
                     attachBtToSpeaker(size);
+                }
+                break;
+            case VOICE:
+                // Televa voice changer — same icon in both states, selected state
+                // tints the icon black on the filled circle (widget convention).
+                if (this.type != Type.VOICE) {
+                    voIpButtonView.unSelectedIcon = new RLottieDrawable(R.raw.voip_voice, "" + R.raw.voip_voice, size, size, true, null);
+                    voIpButtonView.selectedIcon = new RLottieDrawable(R.raw.voip_voice, "" + R.raw.voip_voice, size, size, true, null);
+                    voIpButtonView.selectedIcon.setColorFilter(new PorterDuffColorFilter(Color.BLACK, PorterDuff.Mode.MULTIPLY));
+                    voIpButtonView.selectedIcon.setMasterParent(voIpButtonView);
                 }
                 break;
         }

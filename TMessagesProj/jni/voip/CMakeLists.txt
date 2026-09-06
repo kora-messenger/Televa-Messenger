@@ -405,6 +405,8 @@ add_library(tgcalls STATIC
         voip/tgcalls/EncryptedConnection.cpp
         voip/tgcalls/FieldTrialsConfig.cpp
         voip/tgcalls/MediaManager.cpp
+        voip/tgcalls/VoiceChanger.cpp
+        voip/sonic/sonic.c
         voip/tgcalls/FakeAudioDeviceModule.cpp
         voip/tgcalls/third-party/json11.cpp
         voip/tgcalls/v2_4_0_0/Signaling_4_0_0.cpp

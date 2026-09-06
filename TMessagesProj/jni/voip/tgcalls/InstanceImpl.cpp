@@ -129,6 +129,12 @@ void InstanceImpl::setOutputVolume(float level) {
 	});
 }
 
+void InstanceImpl::setVoiceChangerPreset(int preset, float cloneTargetF0) {
+	_manager->perform([preset, cloneTargetF0](Manager *manager) {
+		manager->setVoiceChangerPreset(preset, cloneTargetF0);
+	});
+}
+
 void InstanceImpl::setAudioOutputDuckingEnabled(bool enabled) {
 	// TODO: not implemented
 }

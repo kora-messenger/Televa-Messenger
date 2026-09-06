@@ -42,6 +42,7 @@ public:
 	void setAudioOutputDevice(std::string id);
 	void setInputVolume(float level);
 	void setOutputVolume(float level);
+	void setVoiceChangerPreset(int preset, float cloneTargetF0);
 
     void addExternalAudioSamples(std::vector<uint8_t> &&samples);
 

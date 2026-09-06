@@ -7,6 +7,7 @@
 #include "AudioDeviceHelper.h"
 #include "Message.h"
 #include "platform/PlatformInterface.h"
+#include "VoiceChanger.h"
 #include "StaticThreads.h"
 
 #include "api/enable_media.h"
@@ -75,10 +76,11 @@ public:
 
 class AudioCapturePostProcessor : public webrtc::CustomProcessing {
 public:
-    AudioCapturePostProcessor(std::function<void(float)> updated, std::vector<float> *externalAudioSamples, webrtc::Mutex *externalAudioSamplesMutex) :
+    AudioCapturePostProcessor(std::function<void(float)> updated, std::vector<float> *externalAudioSamples, webrtc::Mutex *externalAudioSamplesMutex, std::atomic<int> *voiceChangerPreset, std::atomic<float> *voiceCloneTargetF0) :
     _updated(updated),
     _externalAudioSamples(externalAudioSamples),
-    _externalAudioSamplesMutex(externalAudioSamplesMutex) {
+    _externalAudioSamplesMutex(externalAudioSamplesMutex),
+    _voiceChanger(voiceChangerPreset, voiceCloneTargetF0) {
     }
 
     virtual ~AudioCapturePostProcessor() {
@@ -86,6 +88,7 @@ public:
 
 private:
     virtual void Initialize(int sample_rate_hz, int num_channels) override {
+        _sampleRateHz = sample_rate_hz;
     }
 
     virtual void Process(webrtc::AudioBuffer *buffer) override {
@@ -95,6 +98,10 @@ private:
         if (buffer->num_channels() != 1) {
             return;
         }
+
+        // Televa voice changer: transform the mic capture BEFORE external/shared
+        // media samples are mixed in, so only the caller's own voice is converted.
+        _voiceChanger.Process(buffer->channels()[0], (int)buffer->num_frames(), _sampleRateHz);
 
         float peak = 0;
         int peakCount = 0;
@@ -156,6 +163,9 @@ private:
 
     std::vector<float> *_externalAudioSamples = nullptr;
     webrtc::Mutex *_externalAudioSamplesMutex = nullptr;
+
+    tgcalls::VoiceChanger _voiceChanger;
+    int _sampleRateHz = 48000;
 };
 
 } // namespace
@@ -337,7 +347,7 @@ _platformContext(platformContext) {
             auto strong = this;
             strong->_currentMyAudioLevel = level;
         });
-    }, &_externalAudioSamples, &_externalAudioSamplesMutex);
+    }, &_externalAudioSamples, &_externalAudioSamplesMutex, &_voiceChangerPreset, &_voiceCloneTargetF0);
     builder.SetCapturePostProcessing(std::move(audioProcessor));
     peerConnectionFactoryDeps.audio_processing = builder.Create();
 
@@ -1088,6 +1098,11 @@ void MediaManager::setAudioOutputDevice(std::string id) {
 #else
     SetAudioOutputDeviceById(_audioDeviceModule.get(), id);
 #endif
+}
+
+void MediaManager::setVoiceChangerPreset(int preset, float cloneTargetF0) {
+    _voiceChangerPreset.store(preset, std::memory_order_relaxed);
+    _voiceCloneTargetF0.store(cloneTargetF0, std::memory_order_relaxed);
 }
 
 void MediaManager::setInputVolume(float level) {

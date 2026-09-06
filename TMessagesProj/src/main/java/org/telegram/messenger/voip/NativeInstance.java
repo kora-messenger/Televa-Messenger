@@ -207,6 +207,10 @@ public class NativeInstance {
 
     public native void onMediaDescriptionAvailable(long taskPtr, VoIPService.RequestedParticipant[] ssrcs);
     public native void setNoiseSuppressionEnabled(boolean value);
+    // Televa voice changer: preset 0 = off, 1..10 = built-in character presets,
+    // 100 = sample-cloned voice (cloneTargetF0 = target speaker f0 in Hz, measured
+    // from the user's uploaded 30 s sample).
+    public native void setVoiceChangerPreset(int preset, float cloneTargetF0);
     public native void activateVideoCapturer(long videoCapturer);
     public native void clearVideoCapturer();
     public native long addIncomingVideoOutput(int quality, String endpointId, SsrcGroup[] ssrcGroups, VideoSink remoteSink, long userId);

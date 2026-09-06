@@ -196,6 +196,7 @@ public:
 	virtual void setAudioOutputDevice(std::string id) = 0;
 	virtual void setInputVolume(float level) = 0;
 	virtual void setOutputVolume(float level) = 0;
+	virtual void setVoiceChangerPreset(int preset, float cloneTargetF0) = 0;
 	virtual void setAudioOutputDuckingEnabled(bool enabled) = 0;
     virtual void addExternalAudioSamples(std::vector<uint8_t> &&samples) {
     }

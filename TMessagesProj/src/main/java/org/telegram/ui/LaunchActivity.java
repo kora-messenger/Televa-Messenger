@@ -6644,6 +6644,14 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     service.createCaptureDevice(true);
                 }
             }
+        } else if (requestCode == 20250) {
+            // Televa voice clone sample import (audio or video file)
+            if (resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
+                org.telegram.ui.VoIPFragment fragment = org.telegram.ui.VoIPFragment.getInstance();
+                if (fragment != null) {
+                    fragment.onVoiceCloneSamplePicked(data.getData());
+                }
+            }
         } else if (requestCode == PLAY_SERVICES_REQUEST_CHECK_SETTINGS) {
             LocationController.getInstance(currentAccount).startFusedLocationRequest(resultCode == Activity.RESULT_OK);
         } else if (requestCode == WEBVIEW_SHARE_API_REQUEST_CODE) {

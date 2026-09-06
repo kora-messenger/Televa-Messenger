@@ -1,6 +1,8 @@
 #ifndef TGCALLS_MEDIA_MANAGER_H
 #define TGCALLS_MEDIA_MANAGER_H
 
+#include <atomic>
+
 #include "rtc_base/thread.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -74,6 +76,7 @@ public:
 	void setAudioOutputDevice(std::string id);
 	void setInputVolume(float level);
 	void setOutputVolume(float level);
+	void setVoiceChangerPreset(int preset, float cloneTargetF0);
 
     void addExternalAudioSamples(std::vector<uint8_t> &&samples);
 
@@ -188,6 +191,11 @@ private:
 
     std::vector<float> _externalAudioSamples;
     webrtc::Mutex _externalAudioSamplesMutex;
+
+    // Televa voice changer: preset id shared between the control thread and the
+    // capture audio thread (relaxed ordering is fine — preset switches are UI events).
+    std::atomic<int> _voiceChangerPreset{0};
+    std::atomic<float> _voiceCloneTargetF0{0.0f};
 
 	std::shared_ptr<PlatformContext> _platformContext;
 };
