@@ -5429,7 +5429,6 @@ public class VoIPService extends Service implements SensorEventListener, AudioMa
 		}
 	}
 
-	@Override
 	public void applyVoiceChanger() {
 		if (tgVoip[CAPTURE_DEVICE_CAMERA] == null) {
 			return;

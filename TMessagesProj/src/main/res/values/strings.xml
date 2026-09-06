@@ -4376,8 +4376,8 @@
     <string name="VoipVoiceCloneName">Name this voice</string>
     <string name="VoipVoiceCloneDefault">Cloned voice</string>
     <string name="VoipVoiceCloneSaved">Voice clone added and ready to use</string>
-    <string name="VoipVoiceCloneFailed">Couldn't read this sample. Use a clear 10–30 second clip of one person speaking.</string>
-    <string name="VoipVoiceCloneMicBusy">Couldn't access the microphone. Try recording before or after the call.</string>
+    <string name="VoipVoiceCloneFailed">Couldn\'t read this sample. Use a clear 10–30 second clip of one person speaking.</string>
+    <string name="VoipVoiceCloneMicBusy">Couldn\'t access the microphone. Try recording before or after the call.</string>
     <string name="VoipVoiceClonePlay">Play</string>
     <string name="VoipVoiceCloneDelete">Delete</string>
     <string name="VoipVoiceCloneDeleteConfirm">Delete this cloned voice?</string>
