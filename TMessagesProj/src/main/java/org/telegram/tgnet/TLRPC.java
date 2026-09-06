@@ -21581,7 +21581,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             flags2 = stream.readInt32(exception);
             bot_can_edit = hasFlag(flags2, FLAG_1);
@@ -21793,7 +21793,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             flags2 = stream.readInt32(exception);
             bot_can_edit = hasFlag(flags2, FLAG_1);
@@ -21999,7 +21999,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             flags2 = stream.readInt32(exception);
             bot_can_edit = hasFlag(flags2, FLAG_1);
@@ -22198,7 +22198,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             flags2 = stream.readInt32(exception);
             bot_can_edit = hasFlag(flags2, FLAG_1);
@@ -22388,7 +22388,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             flags2 = stream.readInt32(exception);
             bot_can_edit = hasFlag(flags2, FLAG_1);
@@ -22572,7 +22572,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             flags2 = stream.readInt32(exception);
             bot_can_edit = hasFlag(flags2, FLAG_1);
@@ -22754,7 +22754,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             flags2 = stream.readInt32(exception);
             bot_can_edit = hasFlag(flags2, FLAG_1);
@@ -22930,7 +22930,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             flags2 = stream.readInt32(exception);
             bot_can_edit = hasFlag(flags2, FLAG_1);
@@ -23101,7 +23101,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             flags2 = stream.readInt32(exception);
             bot_can_edit = hasFlag(flags2, FLAG_1);
@@ -23255,7 +23255,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             flags2 = stream.readInt32(exception);
             bot_can_edit = hasFlag(flags2, FLAG_1);
@@ -23395,7 +23395,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             attach_menu_enabled = hasFlag(flags, FLAG_29);
             id = stream.readInt64(exception);
             if (hasFlag(flags, FLAG_0)) {
@@ -23518,7 +23518,7 @@ public class TLRPC {
             apply_min_photo = hasFlag(flags, FLAG_25);
             fake = hasFlag(flags, FLAG_26);
             bot_attach_menu = hasFlag(flags, FLAG_27);
-            premium = hasFlag(flags, FLAG_28);
+            premium = true; // Televa: every user gets Televa Premium (badge & perks for all)
             id = stream.readInt64(exception);
             if (hasFlag(flags, FLAG_0)) {
                 access_hash = stream.readInt64(exception);
