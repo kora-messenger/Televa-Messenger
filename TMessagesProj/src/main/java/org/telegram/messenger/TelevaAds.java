@@ -94,10 +94,30 @@ public class TelevaAds {
         AdView adView = new AdView(context);
         adView.setAdUnitId(CHAT_LIST_BANNER_UNIT_ID);
         adView.setAdSize(adSize);
+
+        // Televa: a single ad request at startup is not enough. Brand-new ad
+        // units frequently get no fill on the first requests, which used to
+        // leave the banner permanently hidden until an app restart. Retry
+        // with a growing backoff and log every failure so the exact AdMob
+        // error code is visible in the logs.
+        final int[] attempt = {0};
+        final Runnable[] loadRequest = new Runnable[1];
+        loadRequest[0] = () -> {
+            if (!container.isAttachedToWindow()) {
+                return; // screen gone; no point loading into a dead view
+            }
+            try {
+                adView.loadAd(new AdRequest.Builder().build());
+            } catch (Throwable e) {
+                FileLog.e("TelevaAds: banner load threw", e);
+            }
+        };
+
         adView.setAdListener(new AdListener() {
             @Override
             public void onAdLoaded() {
                 super.onAdLoaded();
+                attempt[0] = 0;
                 int newHeight = Math.max(adSize.getHeightInPixels(context), (int) AndroidUtilities.dp(50));
                 boolean changed;
                 if (top) {
@@ -128,6 +148,20 @@ public class TelevaAds {
                 if (onHeightChanged != null) {
                     onHeightChanged.run();
                 }
+                if (error != null) {
+                    FileLog.e("TelevaAds: banner (" + (top ? "top" : "bottom") + ") failed, code=" + error.getCode() + " msg=" + error.getMessage() + " attempt=" + attempt[0]);
+                }
+                // Backoff: 15s, 30s, 60s, 120s, then 240s for later attempts.
+                // AdMob units can take hours to warm up, so keep retrying
+                // while the screen is alive.
+                attempt[0]++;
+                long delayMs;
+                if (attempt[0] <= 4) {
+                    delayMs = 15_000L << (attempt[0] - 1);
+                } else {
+                    delayMs = 240_000L;
+                }
+                AndroidUtilities.runOnUIThread(loadRequest[0], delayMs);
             }
         });
         container.addView(adView, new FrameLayout.LayoutParams(
@@ -136,8 +170,7 @@ public class TelevaAds {
                 Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL));
 
         container.setVisibility(View.GONE);
-        AdRequest request = new AdRequest.Builder().build();
-        adView.loadAd(request);
+        adView.loadAd(new AdRequest.Builder().build());
         return container;
     }
 }
