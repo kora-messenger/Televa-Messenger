@@ -35,6 +35,8 @@ public class TelevaAds {
     private static boolean initialized;
     private static volatile boolean bannerVisible;
     private static int bannerHeightPx;
+    private static volatile boolean topBannerVisible;
+    private static int topBannerHeightPx;
 
     public static synchronized void init(Context context) {
         if (initialized || context == null) {
@@ -56,12 +58,33 @@ public class TelevaAds {
         return bannerVisible ? bannerHeightPx : 0;
     }
 
+    public static boolean isTopBannerVisible() {
+        return topBannerVisible;
+    }
+
+    public static int getTopBannerHeightPx() {
+        return topBannerVisible ? topBannerHeightPx : 0;
+    }
+
     /**
      * Creates the adaptive banner shown at the bottom of the main chat list.
      * The returned container has a solid background and is ready to be added
      * to the fragment content view with bottom gravity.
      */
     public static View createChatListBanner(Context context, int backgroundColor, Runnable onHeightChanged) {
+        return createBanner(context, backgroundColor, onHeightChanged, false);
+    }
+
+    /**
+     * Creates the adaptive banner pinned at the top of the main chat list,
+     * below the search bar / folder tabs. Uses its own ad request and height
+     * tracking so the top and bottom banners load independently.
+     */
+    public static View createTopChatListBanner(Context context, int backgroundColor, Runnable onHeightChanged) {
+        return createBanner(context, backgroundColor, onHeightChanged, true);
+    }
+
+    private static View createBanner(Context context, int backgroundColor, Runnable onHeightChanged, boolean top) {
         FrameLayout container = new FrameLayout(context);
         container.setBackgroundColor(backgroundColor);
 
@@ -76,9 +99,16 @@ public class TelevaAds {
             public void onAdLoaded() {
                 super.onAdLoaded();
                 int newHeight = Math.max(adSize.getHeightInPixels(context), (int) AndroidUtilities.dp(50));
-                boolean changed = !bannerVisible || bannerHeightPx != newHeight;
-                bannerVisible = true;
-                bannerHeightPx = newHeight + (int) AndroidUtilities.dp(6);
+                boolean changed;
+                if (top) {
+                    changed = !topBannerVisible || topBannerHeightPx != newHeight;
+                    topBannerVisible = true;
+                    topBannerHeightPx = newHeight + (int) AndroidUtilities.dp(6);
+                } else {
+                    changed = !bannerVisible || bannerHeightPx != newHeight;
+                    bannerVisible = true;
+                    bannerHeightPx = newHeight + (int) AndroidUtilities.dp(6);
+                }
                 container.setPadding(0, (int) AndroidUtilities.dp(3), 0, (int) AndroidUtilities.dp(3));
                 container.setVisibility(View.VISIBLE);
                 if (changed && onHeightChanged != null) {
@@ -89,7 +119,11 @@ public class TelevaAds {
             @Override
             public void onAdFailedToLoad(LoadAdError error) {
                 super.onAdFailedToLoad(error);
-                bannerVisible = false;
+                if (top) {
+                    topBannerVisible = false;
+                } else {
+                    bannerVisible = false;
+                }
                 container.setVisibility(View.GONE);
                 if (onHeightChanged != null) {
                     onHeightChanged.run();

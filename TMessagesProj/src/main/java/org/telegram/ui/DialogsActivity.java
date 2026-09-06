@@ -516,6 +516,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean storyHintShown;
     private FragmentFloatingButton floatingButton3;
     private View televaBanner;
+    private View televaTopBanner;
     private FragmentFloatingButton floatingButtonStories;
     private ButtonWithCounterView addChatsToCommunityButton;
     private ChatActivityFadeView communityBottomFadeView;
@@ -2082,6 +2083,15 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 final int h = (int) topPanelLayout.getAnimatedHeightWithPadding(lerp((float) dp(14), dp(7), filterTabsVisibility));
                 t += h;
                 additionalPadding += h;
+            }
+
+            // Televa top ad banner: keep list content below the pinned banner
+            if (televaTopBanner != null) {
+                final int bannerH = TelevaAds.getTopBannerHeightPx();
+                if (bannerH > 0) {
+                    t += bannerH + dp(4);
+                    additionalPadding += bannerH + dp(4);
+                }
             }
 
             t -= dp(5 * Math.max(filterTabsVisibility, topPanelsVisibility));
@@ -4026,6 +4036,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         if (initialDialogsType == DIALOGS_TYPE_DEFAULT) {
             televaBanner = TelevaAds.createChatListBanner(context, getThemedColor(Theme.key_windowBackgroundWhite), this::updateTelevaBannerInsets);
             contentView.addView(televaBanner, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM, 0, 0, 0, 0));
+            televaTopBanner = TelevaAds.createTopChatListBanner(context, getThemedColor(Theme.key_windowBackgroundWhite), this::updateTelevaBannerInsets);
+            contentView.addView(televaTopBanner, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.TOP, 0, 0, 0, 0));
         }
 
         viewPositionWatcher = new ViewPositionWatcher(contentView);
@@ -6621,6 +6633,13 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 animatorSearchVisible.getFloatValue()));
             topPanelsVisibility = topPanelLayout.getMetadata().getTotalVisibility();
             topPanelsHeight = topPanelLayout.getAnimatedHeightWithPadding(0);
+        }
+
+        // Televa top ad banner: pinned below folder tabs / top panels,
+        // moves with the same top-chrome offset as the rest of the header.
+        if (televaTopBanner != null && televaTopBanner.getVisibility() == View.VISIBLE) {
+            float topPanelsH = topPanelLayout != null ? topPanelsHeight : 0; // already visibility-animated
+            televaTopBanner.setTranslationY(totalOffset - searchOffset + topPanelsH + dp(2));
         }
 
         if (topBubblesFadeView != null) {

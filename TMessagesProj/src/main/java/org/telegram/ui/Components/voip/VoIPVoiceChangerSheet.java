@@ -81,7 +81,7 @@ public class VoIPVoiceChangerSheet extends BottomSheet {
     private MediaPlayer previewPlayer;
 
     private static final int COLOR_BG = 0xFF1A1A1E;
-    private static final int COLOR_ACCENT = 0xFF8B5CFF;
+    private static final int COLOR_ACCENT = 0xFF54DB72;
     private static final int COLOR_TEXT = 0xFFFFFFFF;
     private static final int COLOR_SUB = 0xFF9A9AA3;
     private static final int COLOR_ROW = 0x1AFFFFFF;
