@@ -17,8 +17,8 @@
 <resources>
 
     <style name="Theme.TMessages.Start" parent="Theme.AppCompat.Light">
-        <item name="android:windowSplashScreenBackground">#4F09AA</item>
-        <item name="android:windowSplashScreenIconBackgroundColor">#4F09AA</item>
+        <item name="android:windowSplashScreenBackground">#0AAA53</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#0AAA53</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:actionBarStyle">@style/ActionBar.Transparent.TMessages.Start</item>
