@@ -16,6 +16,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.Manifest;
 import android.content.SharedPreferences;
 import android.content.pm.ConfigurationInfo;
 import android.content.pm.PackageInfo;
@@ -123,6 +124,7 @@ import org.telegram.ui.Components.SizeNotifierFrameLayout;
 import org.telegram.ui.Components.TextHelper;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
+import org.telegram.ui.Components.voip.VoIPVoiceChangerSheet;
 import org.telegram.ui.Components.UniversalRecyclerView;
 import org.telegram.ui.Components.blur3.DownscaleScrollableNoiseSuppressor;
 import org.telegram.ui.Components.blur3.ViewGroupPartRenderer;
@@ -696,6 +698,7 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
         items.add(SettingCell.Factory.of(7, IconBackgroundColors.BLUE_ALT.top, IconBackgroundColors.BLUE_ALT.bottom, R.drawable.settings_folders, getString(R.string.SettingsFolders), getString(R.string.SettingsFoldersInfo)));
         items.add(SettingCell.Factory.of(8, IconBackgroundColors.CYAN.top, IconBackgroundColors.CYAN.bottom, R.drawable.settings_devices, getString(R.string.SettingsDevices), getString(R.string.SettingsDevicesInfo)));
         items.add(SettingCell.Factory.of(9, IconBackgroundColors.ORANGE_DEEP.top, IconBackgroundColors.ORANGE_DEEP.bottom, R.drawable.settings_power, getString(R.string.SettingsPowerSaving), getString(R.string.SettingsPowerSavingInfo)));
+        items.add(SettingCell.Factory.of(30, 0xFF54DB72, 0xFF2FA65A, R.drawable.settings_voice, getString(R.string.VoipVoiceChanger), getVoiceChangerSubtitle()));
         items.add(SettingCell.Factory.of(10, IconBackgroundColors.PURPLE.top, IconBackgroundColors.PURPLE.bottom, R.drawable.settings_language, getString(R.string.SettingsLanguage), LocaleController.getCurrentLanguageName()));
 
         items.add(UItem.asShadow(null));
@@ -837,6 +840,10 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 presentSettingFragment(new LanguageSelectActivity());
                 break;
 
+            case 30:
+                openVoiceChangerSheet();
+                break;
+
             case 11:
                 presentSettingFragment(new PremiumPreviewFragment("settings"));
                 break;
@@ -880,6 +887,103 @@ public class SettingsActivity extends BaseFragment implements NotificationCenter
                 }
                 break;
             }
+        }
+    }
+
+    // ------------- Televa voice changer (settings entry) -------------
+
+    private static final int[] VOICE_CHANGER_PRESETS = {
+            R.string.VoipVoiceDeep,
+            R.string.VoipVoiceMonster,
+            R.string.VoipVoiceSoft,
+            R.string.VoipVoiceChipmunk,
+            R.string.VoipVoiceRobot,
+            R.string.VoipVoiceAlien,
+            R.string.VoipVoiceRadio,
+            R.string.VoipVoiceCave,
+            R.string.VoipVoiceSqueaky,
+            R.string.VoipVoiceGhost,
+    };
+
+    private static final int VOICE_CLONE_SETTINGS_SAMPLE_REQUEST = 20251;
+    private static final int VOICE_CLONE_MIC_PERMISSION_REQUEST = 32150;
+
+    private VoIPVoiceChangerSheet voiceChangerSheet;
+
+    private String getVoiceChangerSubtitle() {
+        SharedConfig.loadVoiceChangerConfig();
+        if (SharedConfig.voiceChangerPreset >= 1 && SharedConfig.voiceChangerPreset <= VOICE_CHANGER_PRESETS.length) {
+            return getString(VOICE_CHANGER_PRESETS[SharedConfig.voiceChangerPreset - 1]);
+        }
+        if (SharedConfig.voiceChangerPreset == 100) {
+            for (SharedConfig.VoiceClone clone : SharedConfig.getVoiceClones()) {
+                if (Math.abs(clone.f0 - SharedConfig.voiceCloneTargetF0) < 0.5f) {
+                    return clone.name;
+                }
+            }
+        }
+        return getString(R.string.VoipVoiceOff);
+    }
+
+    private void openVoiceChangerSheet() {
+        Activity parent = getParentActivity();
+        if (parent == null) {
+            return;
+        }
+        if (parent.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            parent.requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, VOICE_CLONE_MIC_PERMISSION_REQUEST);
+            return; // sheet opens in onRequestPermissionsResultFragment
+        }
+        showVoiceChangerSheet();
+    }
+
+    private void showVoiceChangerSheet() {
+        Activity parent = getParentActivity();
+        if (parent == null) {
+            return;
+        }
+        voiceChangerSheet = new VoIPVoiceChangerSheet(parent, new VoIPVoiceChangerSheet.Listener() {
+            @Override
+            public void onPresetSelected(int preset, float cloneTargetF0) {
+                SharedConfig.voiceChangerPreset = preset;
+                SharedConfig.voiceCloneTargetF0 = cloneTargetF0;
+                SharedConfig.saveVoiceChangerConfig();
+                if (listView != null && listView.adapter != null) {
+                    listView.adapter.update(true);
+                }
+            }
+
+            @Override
+            public void onPickSampleFile() {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("*/*");
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"audio/*", "video/*"});
+                    getParentActivity().startActivityForResult(intent, VOICE_CLONE_SETTINGS_SAMPLE_REQUEST);
+                } catch (Exception e) {
+                    FileLog.e(e);
+                }
+            }
+        });
+        voiceChangerSheet.show();
+    }
+
+    @Override
+    public void onActivityResultFragment(int requestCode, int resultCode, Intent data) {
+        if (requestCode == VOICE_CLONE_SETTINGS_SAMPLE_REQUEST && resultCode == Activity.RESULT_OK && data != null && data.getData() != null) {
+            if (voiceChangerSheet != null) {
+                voiceChangerSheet.onSampleFilePicked(data.getData());
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResultFragment(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == VOICE_CLONE_MIC_PERMISSION_REQUEST) {
+            // open even if mic was denied: importing audio/video samples still works,
+            // recording shows a graceful hint if the microphone is unavailable
+            showVoiceChangerSheet();
         }
     }
 
