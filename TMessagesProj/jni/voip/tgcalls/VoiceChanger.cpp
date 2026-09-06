@@ -51,7 +51,7 @@ const VoicePreset *VoiceChanger::PresetById(int id) {
 }
 
 static float ClampFloat(double v, float lo, float hi) {
-    return (float)std::max(lo, std::min(hi, v));
+    return (float)std::max((double)lo, std::min((double)hi, v));
 }
 
 static double OnePoleCoefficient(double cutoffHz, int sampleRate) {
