@@ -313,6 +313,14 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
             reqId = null;
         }
 
+        // Televa: Telegram's own server translation only works for other people's
+        // messages and (mostly) Premium accounts. Televa always translates the
+        // message text itself with the free translator, so it works for every
+        // message, including your own, regardless of the server config.
+        if (reqRichMessage == null) {
+            translateAlt();
+            return;
+        }
         final String method = MessagesController.getInstance(currentAccount).translationsManualEnabled;
         if ("alternative".equalsIgnoreCase(method)) {
             translateAlt();
@@ -456,6 +464,10 @@ public class TranslateAlert2 extends BottomSheet implements NotificationCenter.N
         }
         if ("nb".equals(_fromLng)) {
             _fromLng = "no";
+        }
+        // Televa: unknown source ("und"/empty) -> let Google auto-detect it.
+        if (_fromLng == null || _fromLng.isEmpty() || "und".equalsIgnoreCase(_fromLng)) {
+            _fromLng = "auto";
         }
         final String fromLng = _fromLng;
         String _toLng = toLanguage;

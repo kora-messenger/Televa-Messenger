@@ -32007,7 +32007,13 @@ public class ChatActivity extends BaseFragment implements
                                 }
                             });
                         } else {
-                            cell.setVisibility(View.GONE);
+                            cell.setVisibility(View.VISIBLE);
+                        }
+                        // Televa: Translate is always available on text messages,
+                        // including your own messages and messages already written
+                        // in your language (pick any target in the sheet).
+                        if (finalMessageText != null && finalMessageText.length() > 0 && richMessageToTranslate == null) {
+                            cell.setVisibility(View.VISIBLE);
                         }
                     }
                 }
