@@ -31848,7 +31848,10 @@ public class ChatActivity extends BaseFragment implements
                     if (option == OPTION_TRANSLATE) {
                         final boolean translateEnabled = getMessagesController().getTranslateController().isContextTranslateEnabled();
                         String toLangDefault = LocaleController.getInstance().getCurrentLocale().getLanguage();
-                        String toLang = TranslateAlert2.getToLanguage();
+                        // Televa: always default the target to the user's own app
+                        // language. Telegram otherwise reuses the last language you
+                        // picked (e.g. German) for every future message.
+                        String toLang = toLangDefault;
                         int[] messageIdToTranslate = new int[] { message.getId() };
                         final CharSequence finalMessageText = message.getMessageTextToTranslate(groupedMessages, messageIdToTranslate);
                         Utilities.CallbackReturn<URLSpan, Boolean> onLinkPress = (link) -> {
