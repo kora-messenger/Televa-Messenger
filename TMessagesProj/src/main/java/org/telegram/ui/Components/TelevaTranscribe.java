@@ -23,7 +23,7 @@ import org.telegram.tgnet.TLRPC;
 import org.vosk.LogLevel;
 import org.vosk.Model;
 import org.vosk.Recognizer;
-import org.vosk.Vosk;
+import org.vosk.LibVosk;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -235,7 +235,7 @@ public class TelevaTranscribe {
             if (senderId > 0) {
                 TLRPC.User sender = MessagesController.getInstance(messageObject.currentAccount).getUser(senderId);
                 if (sender != null && !TextUtils.isEmpty(sender.lang_code)) {
-                    String code = normalizeLanguage(sender.language_code);
+                    String code = normalizeLanguage(sender.lang_code);
                     if (code != null) {
                         return code;
                     }
@@ -437,7 +437,7 @@ public class TelevaTranscribe {
     private static String recognize(File modelDir, String language, byte[] pcm16k) throws Exception {
         if (voskInitialized.compareAndSet(false, true)) {
             try {
-                Vosk.setLogLevel(LogLevel.WARN);
+                LibVosk.setLogLevel(LogLevel.WARNINGS);
             } catch (Throwable ignore) {
             }
         }
@@ -752,6 +752,24 @@ public class TelevaTranscribe {
             if (this.format == null) {
                 this.format = format;
             }
+        }
+
+        @Override
+        public int sampleData(com.google.android.exoplayer2.upstream.DataReader input, int length, boolean allowEndOfInput, int sampleDataPart) throws java.io.IOException {
+            byte[] buf = new byte[length];
+            int offset = 0;
+            while (offset < length) {
+                int read = input.read(buf, offset, length - offset);
+                if (read == -1) {
+                    if (allowEndOfInput && offset == 0) {
+                        return com.google.android.exoplayer2.C.RESULT_END_OF_INPUT;
+                    }
+                    throw new java.io.IOException("unexpected end of ogg input");
+                }
+                offset += read;
+            }
+            current.write(buf, 0, length);
+            return length;
         }
 
         @Override
