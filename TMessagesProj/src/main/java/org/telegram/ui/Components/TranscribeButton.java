@@ -21,6 +21,7 @@ import android.text.style.ImageSpan;
 import android.util.Log;
 import android.util.StateSet;
 import android.view.MotionEvent;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -30,6 +31,7 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
 
 import org.telegram.messenger.AccountInstance;
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.BuildVars;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.DialogObject;
@@ -730,30 +732,27 @@ public class TranscribeButton {
                         transcribeOperationsById.put(id, messageObject);
                         messageObject.messageOwner.voiceTranscriptionId = id;
                     } else {
-                        if (err != null && err.text != null) {
-                            if (err.text.startsWith("FLOOD_WAIT_")) {
-                                MessagesController.getInstance(account).updateTranscribeAudioTrialCurrentNumber(0);
-                                MessagesController.getInstance(account).updateTranscribeAudioTrialCooldownUntil(ConnectionsManager.getInstance(account).getCurrentTime() + Utilities.parseInt(err.text));
-                                AndroidUtilities.runOnUIThread(() -> {
-                                    if (transcribeOperationsByDialogPosition != null) {
-                                        transcribeOperationsByDialogPosition.remove((Integer) reqInfoHash(messageObject));
-                                    }
-                                    if (delegate != null) {
-                                        delegate.needShowPremiumBulletin(3);
-                                    }
-                                    NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.voiceTranscriptionUpdate, messageObject);
-                                    NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.updateTranscriptionLock);
-                                });
-                                return;
-                            }
+                        if (err != null && err.text != null && err.text.startsWith("FLOOD_WAIT_")) {
+                            MessagesController.getInstance(account).updateTranscribeAudioTrialCurrentNumber(0);
+                            MessagesController.getInstance(account).updateTranscribeAudioTrialCooldownUntil(ConnectionsManager.getInstance(account).getCurrentTime() + Utilities.parseInt(err.text));
                         }
-
-                        text = "";
-                        isFinal = true;
+                        // Televa: Telegram's servers only transcribe voice notes for
+                        // Premium accounts, and real Televa users are not Premium
+                        // there, so the server request fails. Fall back to free
+                        // on-device recognition (TelevaTranscribe) which works for
+                        // every user. The loading state stays alive meanwhile.
+                        startTelevaOnDevice(messageObject);
+                        return;
                     }
                     final String finalText = text;
                     final long finalId = id;
                     final long duration = SystemClock.elapsedRealtime() - start;
+                    if (isFinal && TextUtils.isEmpty(finalText)) {
+                        // Televa: the server returned nothing useful — let the
+                        // on-device engine have a try before giving up.
+                        startTelevaOnDevice(messageObject);
+                        return;
+                    }
                     TranscribeButton.openVideoTranscription(messageObject);
                     messageObject.messageOwner.voiceTranscriptionOpen = true;
                     messageObject.messageOwner.voiceTranscriptionFinal = isFinal;
@@ -777,6 +776,55 @@ public class TranscribeButton {
                 NotificationCenter.getInstance(account).postNotificationName(NotificationCenter.voiceTranscriptionUpdate, messageObject, null, null, (Boolean) false, null);
             });
         }
+    }
+
+    /**
+     * Televa: runs free on-device speech recognition when the Telegram server
+     * refuses to transcribe (all Televa users are non-premium there). The
+     * message stays in transcribeOperationsByDialogPosition so the button keeps
+     * its loading animation; on success the text goes through the exact same
+     * finishTranscription pipeline the server flow uses.
+     */
+    private static void startTelevaOnDevice(MessageObject messageObject) {
+        if (messageObject == null || messageObject.messageOwner == null) {
+            return;
+        }
+        if (transcribeOperationsByDialogPosition == null) {
+            transcribeOperationsByDialogPosition = new HashMap<>();
+        }
+        transcribeOperationsByDialogPosition.put((Integer) reqInfoHash(messageObject), messageObject);
+        NotificationCenter.getInstance(messageObject.currentAccount).postNotificationName(NotificationCenter.updateTranscriptionLock);
+        TelevaTranscribe.transcribe(messageObject, new TelevaTranscribe.Callback() {
+            @Override
+            public void onResult(String text) {
+                AndroidUtilities.runOnUIThread(() -> {
+                    if (messageObject.messageOwner == null) {
+                        return;
+                    }
+                    TranscribeButton.openVideoTranscription(messageObject);
+                    messageObject.messageOwner.voiceTranscriptionOpen = true;
+                    MessagesStorage.getInstance(messageObject.currentAccount).updateMessageVoiceTranscriptionOpen(messageObject.getDialogId(), messageObject.getId(), messageObject.messageOwner);
+                    finishTranscription(messageObject, 0, text);
+                });
+            }
+
+            @Override
+            public void onError(String reason) {
+                AndroidUtilities.runOnUIThread(() -> {
+                    if (transcribeOperationsByDialogPosition != null) {
+                        transcribeOperationsByDialogPosition.remove((Integer) reqInfoHash(messageObject));
+                    }
+                    NotificationCenter.getInstance(messageObject.currentAccount).postNotificationName(NotificationCenter.voiceTranscriptionUpdate, messageObject);
+                    NotificationCenter.getInstance(messageObject.currentAccount).postNotificationName(NotificationCenter.updateTranscriptionLock);
+                    if (reason != null) {
+                        try {
+                            Toast.makeText(ApplicationLoader.applicationContext, reason, Toast.LENGTH_SHORT).show();
+                        } catch (Throwable ignore) {
+                        }
+                    }
+                });
+            }
+        });
     }
 
     public static boolean finishTranscription(MessageObject messageObject, long transcription_id, String text) {
