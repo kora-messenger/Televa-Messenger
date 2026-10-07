@@ -789,6 +789,12 @@ public class TranscribeButton {
         if (messageObject == null || messageObject.messageOwner == null) {
             return;
         }
+        // The server-response callback (and trial-cooldown path) that calls us
+        // runs on a background thread. Everything below touches the button
+        // state map and posts UI notifications, so hop to the main thread
+        // first — posting view-touching notifications off the main thread
+        // crashes the app (CalledFromWrongThreadException).
+        AndroidUtilities.runOnUIThread(() -> {
         if (transcribeOperationsByDialogPosition == null) {
             transcribeOperationsByDialogPosition = new HashMap<>();
         }
@@ -824,6 +830,7 @@ public class TranscribeButton {
                     }
                 });
             }
+        });
         });
     }
 
